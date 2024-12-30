@@ -51,22 +51,18 @@ func mapToTrace(eventData string) (*ptrace.Traces, error) {
 	apiSpan.SetName(fmt.Sprintf("apim: %s %s %s", apimTracePayload.HttpMethod, apimTracePayload.ApiName, apimTracePayload.HttpTarget))
 	// example traceparent: 00-a9b7d8bbcecf8c7d9d24c69cc86f694d-2defb8587ed6dfef-01
 	// format: version-trace_id-parent_id-trace_flags
-	if apimTracePayload.TraceParent != nil {
-		fmt.Printf("Extracting span and trace id from traceparent %s", *apimTracePayload.TraceParent)
-		traceString := (*apimTracePayload.TraceParent)[3:35]
-		traceId, err := uuid.Parse(traceString)
-		if err != nil {
-			return nil, fmt.Errorf("error converting traceId to uuid: traceString: %s err: %v", traceString, err)
-		} else {
-			apiSpan.SetTraceID(pcommon.TraceID(traceId))
-		}
-
-		decodedSpanId, err := hex.DecodeString((*apimTracePayload.TraceParent)[36:52])
-		apiSpan.SetSpanID(pcommon.SpanID(decodedSpanId))
-		fmt.Printf("Extracted TraceId=%s and SpanId=%s, apiSpanId=%s", (*apimTracePayload.TraceParent)[3:35], (*apimTracePayload.TraceParent)[36:52], apiSpan.SpanID().String())
+	fmt.Printf("Extracting span and trace id from traceparent %s", *apimTracePayload.TraceParent)
+	traceString := (*apimTracePayload.TraceParent)[3:35]
+	traceId, err := uuid.Parse(traceString)
+	if err != nil {
+		return nil, fmt.Errorf("error converting traceId to uuid: traceString: %s err: %v", traceString, err)
 	} else {
-		return nil, fmt.Errorf("traceparent is required, but not found in the payload")
+		apiSpan.SetTraceID(pcommon.TraceID(traceId))
 	}
+
+	decodedSpanId, err := hex.DecodeString((*apimTracePayload.TraceParent)[36:52])
+	apiSpan.SetSpanID(pcommon.SpanID(decodedSpanId))
+	fmt.Printf("Extracted TraceId=%s and SpanId=%s, apiSpanId=%s", (*apimTracePayload.TraceParent)[3:35], (*apimTracePayload.TraceParent)[36:52], apiSpan.SpanID().String())
 	if apimTracePayload.ParentSpanId != nil {
 		apiSpan.SetParentSpanID(pcommon.SpanID([]byte(*apimTracePayload.ParentSpanId)))
 	}
