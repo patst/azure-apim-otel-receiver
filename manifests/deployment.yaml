@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azure-apim-otel-collector
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "apim-otel-collector"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "apim-otel-collector"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: collector
+          image: azure-apim-otel-collector:latest # put the correct image name here
+          imagePullPolicy: Always
+          args:
+            - "--config=/cfg/config.yaml"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /cfg/
+              name: config-volume
+      volumes:
+        - name: config-volume
+          configMap:
+            name: azure-apim-otel-collector

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-apim-otel-collector
+data:
+  config.yaml: |-
+    receivers:
+      apimtracer: # this line represents the ID of your receiver
+        fully_qualified_namespace: "<your-ns-name>.servicebus.windows.net"
+        event_hub_name: "<your-eventhub-name>"
+        consumer_group: "<consumer-group-name>"
+        storage_container_url: "https://<eventhub-offsets-storage-account-name>.blob.core.windows.net/<container-name>"
+    processors:
+      batch:
+    exporters:
+      debug:
+        verbosity: detailed
+      otlphttp:
+        endpoint: "<grafana_tempo_host_name>"
+        sending_queue:
+          # see for config:
+          # https://github.com/open-telemetry/opentelemetry-collector/tree/main/exporter/exporterhelper
+          queue_size: 200
+    service:
+      pipelines:
+        traces:
+          receivers: [apimtracer]
+          processors: [batch]
+          exporters: [debug, otlphttp]
+      telemetry:
+        logs:
+          level: debug

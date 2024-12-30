@@ -1,0 +1,23 @@
+receivers:
+  apimtracer: # this line represents the ID of your receiver
+    fully_qualified_namespace: "<event-hub-namespace>>.servicebus.windows.net"
+    event_hub_name: "<event-hub-name>>"
+    consumer_group: "<consumergroup-name>"
+    storage_container_url: "https://<storage-account-for-offsets>.blob.core.windows.net/<container-name>"
+
+processors:
+  batch:
+
+exporters:
+  # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
+  debug:
+    verbosity: detailed
+service:
+  pipelines:
+    traces:
+      receivers: [otlp, apimtracer]
+      processors: [batch]
+      exporters: [debug]
+  telemetry:
+    logs:
+      level: debug
