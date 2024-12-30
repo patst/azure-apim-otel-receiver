@@ -64,8 +64,10 @@ func (apimtracerRcvr *apimtracerReceiver) Start(_ context.Context, host componen
 			}
 
 			go func() {
-				if err := apimtracerRcvr.processEvents(partitionClient); err != nil {
-					fmt.Printf("Trace received with body %v\n", err)
+				err := apimtracerRcvr.processEvents(partitionClient)
+				if err != nil {
+					apimtracerRcvr.logger.Error(fmt.Sprintf("Error processing events: %v", err))
+					return
 				}
 			}()
 		}
